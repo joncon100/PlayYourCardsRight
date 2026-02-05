@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-<title>Card Sequence – Per-Position Discards</title>
+<title>Card Sequence – Per-Position Discards (Smooth Move)</title>
 
 <style>
   :root{
@@ -52,6 +52,8 @@
     perspective:900px;
     filter: drop-shadow(0 10px 22px rgba(0,0,0,0.35));
     cursor:pointer;
+    position:relative;
+    will-change: transform;
   }
 
   .scene.moving{
@@ -66,18 +68,22 @@
     transform-style:preserve-3d;
     transform: rotateX(0deg);
     transition: transform var(--flipDur) ease-in-out;
+    will-change: transform;
   }
 
   .face{
     position:absolute;
     inset:0;
     backface-visibility:hidden;
+    -webkit-backface-visibility:hidden;
+    overflow:hidden;
   }
 
   .face img{
     width:100%;
     height:100%;
     object-fit:contain;
+    display:block;
   }
 
   .back  { transform: rotateX(0deg)   translateZ(0.6px); }
@@ -94,7 +100,12 @@
     padding:8px 10px;
     border-radius:10px;
     font-size:13px;
-    max-width:46ch;
+    max-width:60ch;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card{ transition:none; }
+    .scene{ transition:none !important; }
   }
 </style>
 </head>
@@ -104,15 +115,15 @@
 
 <div id="table">
 
-  <!-- Row 3 -->
-  <div class="row">
+  <!-- Row 3: [b] [8] [ ] [ ] -->
+  <div class="row" id="row3">
     <div class="slot" id="slot-b"></div>
 
     <div class="slot" id="slot-8">
       <div class="scene" id="s8">
         <div class="card" id="c8">
-          <div class="face back"><img src="cardback3.png"></div>
-          <div class="face front"><img id="face8"></div>
+          <div class="face back"><img src="cardback3.png" alt="Back"></div>
+          <div class="face front"><img id="face8" alt="Face 8"></div>
         </div>
       </div>
     </div>
@@ -121,185 +132,296 @@
     <div class="slot"></div>
   </div>
 
-  <!-- Row 2 -->
-  <div class="row">
+  <!-- Row 2: [a] [5] [6] [7] -->
+  <div class="row" id="row2">
     <div class="slot" id="slot-a"></div>
 
-    <div class="slot"><div class="scene" id="s5"><div class="card" id="c5">
-      <div class="face back"><img src="cardback3.png"></div>
-      <div class="face front"><img id="face5"></div>
-    </div></div></div>
+    <div class="slot" id="slot-5">
+      <div class="scene" id="s5">
+        <div class="card" id="c5">
+          <div class="face back"><img src="cardback3.png" alt="Back"></div>
+          <div class="face front"><img id="face5" alt="Face 5"></div>
+        </div>
+      </div>
+    </div>
 
-    <div class="slot"><div class="scene" id="s6"><div class="card" id="c6">
-      <div class="face back"><img src="cardback3.png"></div>
-      <div class="face front"><img id="face6"></div>
-    </div></div></div>
+    <div class="slot" id="slot-6">
+      <div class="scene" id="s6">
+        <div class="card" id="c6">
+          <div class="face back"><img src="cardback3.png" alt="Back"></div>
+          <div class="face front"><img id="face6" alt="Face 6"></div>
+        </div>
+      </div>
+    </div>
 
-    <div class="slot"><div class="scene" id="s7"><div class="card" id="c7">
-      <div class="face back"><img src="cardback3.png"></div>
-      <div class="face front"><img id="face7"></div>
-    </div></div></div>
+    <div class="slot" id="slot-7">
+      <div class="scene" id="s7">
+        <div class="card" id="c7">
+          <div class="face back"><img src="cardback3.png" alt="Back"></div>
+          <div class="face front"><img id="face7" alt="Face 7"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Row 1 -->
-  <div class="row">
+  <!-- Row 1: [1] [2] [3] [4] -->
+  <div class="row" id="row1">
     <div class="slot" id="slot-1">
       <div class="scene" id="s1">
         <div class="card is-flipped" id="c1">
-          <div class="face back"><img src="cardback3.png"></div>
-          <div class="face front"><img id="face1"></div>
+          <div class="face back"><img src="cardback3.png" alt="Back"></div>
+          <div class="face front"><img id="face1" alt="Face 1"></div>
         </div>
       </div>
     </div>
 
-    <div class="slot"><div class="scene" id="s2"><div class="card" id="c2">
-      <div class="face back"><img src="cardback3.png"></div>
-      <div class="face front"><img id="face2"></div>
-    </div></div></div>
+    <div class="slot" id="slot-2">
+      <div class="scene" id="s2">
+        <div class="card" id="c2">
+          <div class="face back"><img src="cardback3.png" alt="Back"></div>
+          <div class="face front"><img id="face2" alt="Face 2"></div>
+        </div>
+      </div>
+    </div>
 
-    <div class="slot"><div class="scene" id="s3"><div class="card" id="c3">
-      <div class="face back"><img src="cardback3.png"></div>
-      <div class="face front"><img id="face3"></div>
-    </div></div></div>
+    <div class="slot" id="slot-3">
+      <div class="scene" id="s3">
+        <div class="card" id="c3">
+          <div class="face back"><img src="cardback3.png" alt="Back"></div>
+          <div class="face front"><img id="face3" alt="Face 3"></div>
+        </div>
+      </div>
+    </div>
 
-    <div class="slot"><div class="scene" id="s4"><div class="card" id="c4">
-      <div class="face back"><img src="cardback3.png"></div>
-      <div class="face front"><img id="face4"></div>
-    </div></div></div>
+    <div class="slot" id="slot-4">
+      <div class="scene" id="s4">
+        <div class="card" id="c4">
+          <div class="face back"><img src="cardback3.png" alt="Back"></div>
+          <div class="face front"><img id="face4" alt="Face 4"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
 </div>
 </div>
 
 <div class="hint" id="hint">
-Click anywhere to advance. Click cards in positions 1 / left of 5 / left of 8 to discard (once each).
+Click anywhere to advance. Click a card in position 1 / left of 5 / left of 8 to discard (once each). Replacement is face up.
 </div>
 
 <script>
-/* ====== DECK ====== */
-const FACE_IMAGES = [
-  "faces/10_of_clubs.png","faces/10_of_diamonds.png","faces/10_of_hearts.png","faces/10_of_spades.png",
-  "faces/2_of_clubs.png","faces/2_of_diamonds.png","faces/2_of_hearts.png","faces/2_of_spades.png",
-  "faces/3_of_clubs.png","faces/3_of_diamonds.png","faces/3_of_hearts.png","faces/3_of_spades.png",
-  "faces/4_of_clubs.png","faces/4_of_diamonds.png","faces/4_of_hearts.png","faces/4_of_spades.png",
-  "faces/5_of_clubs.png","faces/5_of_diamonds.png","faces/5_of_hearts.png","faces/5_of_spades.png",
-  "faces/6_of_clubs.png","faces/6_of_diamonds.png","faces/6_of_hearts.png","faces/6_of_spades.png",
-  "faces/7_of_clubs.png","faces/7_of_diamonds.png","faces/7_of_hearts.png","faces/7_of_spades.png",
-  "faces/8_of_clubs.png","faces/8_of_diamonds.png","faces/8_of_hearts.png","faces/8_of_spades.png",
-  "faces/9_of_clubs.png","faces/9_of_diamonds.png","faces/9_of_hearts.png","faces/9_of_spades.png",
-  "faces/ace_of_clubs.png","faces/ace_of_diamonds.png","faces/ace_of_hearts.png","faces/ace_of_spades2.png",
-  "faces/jack_of_clubs2.png","faces/jack_of_diamonds2.png","faces/jack_of_hearts2.png","faces/jack_of_spades2.png",
-  "faces/queen_of_clubs2.png","faces/queen_of_diamonds2.png","faces/queen_of_hearts2.png","faces/queen_of_spades2.png",
-  "faces/king_of_clubs2.png","faces/king_of_diamonds2.png","faces/king_of_hearts2.png","faces/king_of_spades2.png"
-];
+  /* ====== DECK (your exact filenames) ====== */
+  const FACE_IMAGES = [
+    "faces/10_of_clubs.png","faces/10_of_diamonds.png","faces/10_of_hearts.png","faces/10_of_spades.png",
+    "faces/2_of_clubs.png","faces/2_of_diamonds.png","faces/2_of_hearts.png","faces/2_of_spades.png",
+    "faces/3_of_clubs.png","faces/3_of_diamonds.png","faces/3_of_hearts.png","faces/3_of_spades.png",
+    "faces/4_of_clubs.png","faces/4_of_diamonds.png","faces/4_of_hearts.png","faces/4_of_spades.png",
+    "faces/5_of_clubs.png","faces/5_of_diamonds.png","faces/5_of_hearts.png","faces/5_of_spades.png",
+    "faces/6_of_clubs.png","faces/6_of_diamonds.png","faces/6_of_hearts.png","faces/6_of_spades.png",
+    "faces/7_of_clubs.png","faces/7_of_diamonds.png","faces/7_of_hearts.png","faces/7_of_spades.png",
+    "faces/8_of_clubs.png","faces/8_of_diamonds.png","faces/8_of_hearts.png","faces/8_of_spades.png",
+    "faces/9_of_clubs.png","faces/9_of_diamonds.png","faces/9_of_hearts.png","faces/9_of_spades.png",
+    "faces/ace_of_clubs.png","faces/ace_of_diamonds.png","faces/ace_of_hearts.png","faces/ace_of_spades2.png",
+    "faces/jack_of_clubs2.png","faces/jack_of_diamonds2.png","faces/jack_of_hearts2.png","faces/jack_of_spades2.png",
+    "faces/queen_of_clubs2.png","faces/queen_of_diamonds2.png","faces/queen_of_hearts2.png","faces/queen_of_spades2.png",
+    "faces/king_of_clubs2.png","faces/king_of_diamonds2.png","faces/king_of_hearts2.png","faces/king_of_spades2.png"
+  ];
 
-let deck = [];
-const usedDiscardSlots = new Set();
+  let deck = [];
+  const usedDiscardSlots = new Set();
+  let busy = false;
+  let step = 0;
 
-const wait = ms => new Promise(r=>setTimeout(r,ms));
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
-function shuffle(a){
-  a=[...a];
-  for(let i=a.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [a[i],a[j]]=[a[j],a[i]];
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
   }
-  return a;
-}
 
-function deal(){
-  deck = shuffle(FACE_IMAGES);
-  const faces = deck.splice(0,8);
-  for(let i=1;i<=8;i++){
-    document.getElementById("face"+i).src = faces[i-1];
+  function deal(){
+    deck = shuffle(FACE_IMAGES);
+    const faces = deck.splice(0, 8); // remove dealt cards from deck
+    for(let i=1;i<=8;i++){
+      document.getElementById("face"+i).src = faces[i-1];
+    }
   }
-}
 
-function reset(){
-  document.querySelectorAll(".card").forEach(c=>c.classList.remove("is-flipped"));
-  document.getElementById("c1").classList.add("is-flipped");
-}
+  function reset(){
+    document.querySelectorAll(".card").forEach(c => c.classList.remove("is-flipped"));
+    document.getElementById("c1").classList.add("is-flipped"); // 1 starts face up
+  }
 
-function discardSlot(scene){
-  return scene.parentElement.id;
-}
+  function slotIdOf(scene){
+    return scene.parentElement.id;
+  }
 
-function canDiscard(scene){
-  const slot = discardSlot(scene);
-  return ["slot-1","slot-a","slot-b"].includes(slot)
-    && !usedDiscardSlots.has(slot)
-    && deck.length>0;
-}
+  function canDiscard(scene){
+    const slot = slotIdOf(scene);
+    return ["slot-1","slot-a","slot-b"].includes(slot) &&
+           !usedDiscardSlots.has(slot) &&
+           deck.length > 0 &&
+           !busy;
+  }
 
-async function discard(scene){
-  if(!canDiscard(scene)) return;
+  async function discard(scene){
+    if(!canDiscard(scene)) return;
 
-  usedDiscardSlots.add(discardSlot(scene));
+    usedDiscardSlots.add(slotIdOf(scene));
+    busy = true;
 
-  const card = scene.querySelector(".card");
-  const img  = scene.querySelector(".front img");
+    const card = scene.querySelector(".card");
+    const img  = scene.querySelector(".face.front img");
 
-  scene.classList.add("moving");
-  scene.style.transition="transform 200ms,opacity 200ms";
-  scene.style.transform="scale(0.6)";
-  scene.style.opacity="0";
-  await wait(200);
+    // Discard animation
+    scene.classList.add("moving");
+    scene.style.transition = "transform 200ms ease, opacity 200ms ease";
+    scene.style.transform  = "scale(0.6)";
+    scene.style.opacity    = "0";
+    await wait(200);
 
-  img.src = deck.shift();
-  card.classList.add("is-flipped");
+    // Draw replacement (unique from remaining deck), and reveal face-up
+    img.src = deck.shift();
+    card.classList.add("is-flipped");
 
-  scene.style.transform="";
-  scene.style.opacity="1";
-  await wait(200);
+    // Return animation
+    scene.style.transform = "";
+    scene.style.opacity   = "1";
+    await wait(200);
 
-  scene.classList.remove("moving");
-}
+    // Cleanup
+    scene.style.transition = "";
+    scene.classList.remove("moving");
 
-async function move(sceneId, slotId){
-  const s=document.getElementById(sceneId);
-  s.classList.add("moving");
-  s.style.transform=`translateY(-18px) scale(1.04)`;
-  await wait(180);
-  document.getElementById(slotId).appendChild(s);
-  s.style.transform="";
-  await wait(650);
-  s.classList.remove("moving");
-}
+    busy = false;
+  }
 
-/* ====== SEQUENCE ====== */
-const steps=[
-  ()=>c2.classList.add("is-flipped"),
-  ()=>c3.classList.add("is-flipped"),
-  ()=>c4.classList.add("is-flipped"),
-  ()=>move("s4","slot-a"),
-  ()=>c5.classList.add("is-flipped"),
-  ()=>c6.classList.add("is-flipped"),
-  ()=>c7.classList.add("is-flipped"),
-  ()=>move("s7","slot-b"),
-  ()=>c8.classList.add("is-flipped")
-];
+  // Smooth FLIP + lift + drop move
+  async function moveSceneToSlotLift(sceneId, slotId){
+    busy = true;
 
-let step=0,busy=false;
+    const scene = document.getElementById(sceneId);
+    const scenes = Array.from(document.querySelectorAll(".scene"));
 
-async function advance(){
-  if(busy||step>=steps.length) return;
-  busy=true;
-  await steps[step++]();
-  busy=false;
-}
+    // Clear inline transforms/transitions from prior actions
+    scenes.forEach(s => { s.style.transition = ""; s.style.transform = ""; });
 
-/* ====== INIT ====== */
-deal();
-reset();
+    const liftDur = 180;
+    const liftPx  = 18;
+    const moveDur = 650;
 
-document.addEventListener("click", advance);
+    // LIFT
+    scene.classList.add("moving");
+    scene.style.transition = `transform ${liftDur}ms ease-out`;
+    scene.style.transform  = `translateY(-${liftPx}px) scale(1.04)`;
+    await wait(liftDur);
 
-document.querySelectorAll(".scene").forEach(s=>{
-  s.addEventListener("click", e=>{
-    e.stopPropagation();
-    discard(s);
+    // FIRST
+    const first = new Map();
+    scenes.forEach(s => first.set(s.id, s.getBoundingClientRect()));
+
+    // DOM change
+    document.getElementById(slotId).appendChild(scene);
+
+    // LAST
+    const last = new Map();
+    scenes.forEach(s => last.set(s.id, s.getBoundingClientRect()));
+
+    // INVERT
+    scenes.forEach(s => {
+      const f = first.get(s.id);
+      const l = last.get(s.id);
+      if(!f || !l) return;
+
+      const dx = f.left - l.left;
+      const dy = f.top  - l.top;
+
+      if(dx || dy){
+        s.style.transition = "transform 0s";
+        if(s === scene){
+          s.style.transform = `translate(${dx}px, ${dy}px) translateY(-${liftPx}px) scale(1.04)`;
+        } else {
+          s.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
+      }
+    });
+
+    void document.body.offsetHeight;
+
+    // PLAY
+    scenes.forEach(s => {
+      if(!s.style.transform) return;
+      s.style.transition = `transform ${moveDur}ms ease-in-out`;
+      if(s === scene){
+        s.style.transform = `translateY(-${liftPx}px) scale(1.04)`;
+      } else {
+        s.style.transform = "";
+      }
+    });
+
+    await wait(moveDur);
+
+    // DROP
+    scene.style.transition = `transform ${liftDur}ms ease-in`;
+    scene.style.transform = "";
+    await wait(liftDur);
+
+    // Cleanup
+    scenes.forEach(s => { s.style.transition = ""; s.style.transform = ""; });
+    scene.classList.remove("moving");
+
+    busy = false;
+  }
+
+  async function advance(){
+    if(busy) return;
+    if(step >= steps.length) return;
+
+    busy = true;
+    await steps[step++]();
+    busy = false;
+  }
+
+  /* ====== SEQUENCE ====== */
+  const steps = [
+    async () => { document.getElementById("c2").classList.add("is-flipped"); await wait(600); },
+    async () => { document.getElementById("c3").classList.add("is-flipped"); await wait(600); },
+    async () => { document.getElementById("c4").classList.add("is-flipped"); await wait(600); },
+    async () => { await moveSceneToSlotLift("s4","slot-a"); },
+    async () => { document.getElementById("c5").classList.add("is-flipped"); await wait(600); },
+    async () => { document.getElementById("c6").classList.add("is-flipped"); await wait(600); },
+    async () => { document.getElementById("c7").classList.add("is-flipped"); await wait(600); },
+    async () => { await moveSceneToSlotLift("s7","slot-b"); },
+    async () => { document.getElementById("c8").classList.add("is-flipped"); await wait(600); }
+  ];
+
+  /* ====== INIT ====== */
+  deal();
+  reset();
+
+  // Click anywhere to advance the sequence
+  document.addEventListener("click", advance);
+
+  // Click a card to discard (if it's in slot-1/slot-a/slot-b and unused)
+  document.querySelectorAll(".scene").forEach(scene => {
+    scene.addEventListener("click", (e) => {
+      e.stopPropagation();
+      discard(scene);
+    });
   });
-});
+
+  // Optional: Space/Enter to advance (nice for presenting)
+  document.addEventListener("keydown", (e) => {
+    if(e.code === "Space" || e.code === "Enter"){
+      e.preventDefault();
+      advance();
+    }
+  });
 </script>
 
 </body>
