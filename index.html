@@ -227,6 +227,9 @@
   </div>
 </div>
 
+<!-- ✅ MP3 element -->
+<audio id="endgame" src="endgame.mp3" preload="auto"></audio>
+
 <script>
 /* ====== DECK ====== */
 const FACE_IMAGES = [
@@ -286,25 +289,28 @@ function sfxFlip(){ blip(520, 0.07, "triangle", 0.05); blip(760, 0.05, "triangle
 function sfxMove(){ blip(220, 0.10, "sawtooth", 0.03); blip(330, 0.10, "sawtooth", 0.02); }
 function sfxReplace(){ blip(900, 0.06, "square", 0.04); blip(420, 0.10, "sine", 0.03); }
 
-/* ====== ✅ Endgame MP3 via WebAudio (reliable on GitHub Pages) ====== */
-let endgameBuffer = null;
-let endgameLoading = false;
+/* ====== ✅ Endgame MP3 unlock + play ====== */
+let endgameUnlocked = false;
 let endgamePlayed = false;
 
-async function loadEndgame(){
-  if(endgameBuffer || endgameLoading) return;
-  endgameLoading = true;
+async function unlockEndgame(){
+  if(endgameUnlocked) return;
+  const a = document.getElementById("endgame");
+  if(!a) return;
+
   try{
-    // Ensure file name & case exactly match your repo: "endgame.mp3"
-    const res = await fetch("endgame.mp3", { cache: "no-store" });
-    if(!res.ok) throw new Error("MP3 fetch failed: " + res.status);
-    const arr = await res.arrayBuffer();
-    ensureAudio();
-    endgameBuffer = await audioCtx.decodeAudioData(arr);
-  } catch(err){
-    console.error(err);
-  } finally{
-    endgameLoading = false;
+    // Attempt to unlock by playing muted briefly during the user gesture
+    a.volume = 0;
+    await a.play();
+    a.pause();
+    a.currentTime = 0;
+    a.volume = 1;
+    endgameUnlocked = true;
+  } catch (err){
+    // If this fails, it usually means the call wasn't during a user gesture
+    // We'll try again on the next gesture.
+    // (Also helpful for debugging)
+    console.warn("Endgame unlock failed (will retry on next click):", err);
   }
 }
 
@@ -312,15 +318,14 @@ function playEndgame(){
   if(endgamePlayed) return;
   endgamePlayed = true;
 
-  if(!audioCtx || !endgameBuffer){
-    console.warn("Endgame not loaded yet (buffer missing).");
-    return;
-  }
+  const a = document.getElementById("endgame");
+  if(!a) return;
 
-  const src = audioCtx.createBufferSource();
-  src.buffer = endgameBuffer;
-  src.connect(audioCtx.destination);
-  src.start();
+  a.currentTime = 0;
+  a.volume = 1;
+  a.play().catch(err => {
+    console.warn("Endgame play() blocked/failed:", err);
+  });
 }
 
 /* ====== Deal / reset ====== */
@@ -383,7 +388,7 @@ async function replaceCard(scene){
 
   busy = true;
   ensureAudio();
-  loadEndgame(); // ✅ prime mp3 on first interaction
+  await unlockEndgame();
   sfxReplace();
 
   const card = scene.querySelector(".card");
@@ -414,7 +419,7 @@ async function replaceCard(scene){
 async function moveSceneToSlotLift(sceneId, slotTargetId){
   busy = true;
   ensureAudio();
-  loadEndgame(); // ✅ prime mp3 on first interaction
+  await unlockEndgame();
   sfxMove();
 
   const scene = document.getElementById(sceneId);
@@ -477,7 +482,7 @@ async function advance(){
   if(busy || step >= steps.length) return;
   busy = true;
   ensureAudio();
-  loadEndgame(); // ✅ start loading as soon as user interacts
+  await unlockEndgame();   // ✅ unlock mp3 on the *same* user gesture
   await steps[step++]();
   busy = false;
   updateEligibilityUI();
@@ -496,7 +501,7 @@ const steps = [
     document.getElementById("c8").classList.add("is-flipped");
     sfxFlip();
     await wait(flipWait);
-    playEndgame(); // ✅ play endgame.mp3 once final flip finishes
+    playEndgame(); // ✅ plays reliably after final flip
   }
 ];
 
