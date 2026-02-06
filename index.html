@@ -143,7 +143,7 @@
       <div class="slot" id="slot-8">
         <div class="scene" id="s8">
           <div class="card" id="c8">
-            <div class="face back"><img src="cardback3.png" alt="Back"></div>
+            <div class="face back"><img src="cardback.png" alt="Back"></div>
             <div class="face front"><img id="face8" alt="Face 8"></div>
           </div>
         </div>
@@ -160,7 +160,7 @@
       <div class="slot" id="slot-5">
         <div class="scene" id="s5">
           <div class="card" id="c5">
-            <div class="face back"><img src="cardback3.png" alt="Back"></div>
+            <div class="face back"><img src="cardback.png" alt="Back"></div>
             <div class="face front"><img id="face5" alt="Face 5"></div>
           </div>
         </div>
@@ -169,7 +169,7 @@
       <div class="slot" id="slot-6">
         <div class="scene" id="s6">
           <div class="card" id="c6">
-            <div class="face back"><img src="cardback3.png" alt="Back"></div>
+            <div class="face back"><img src="cardback.png" alt="Back"></div>
             <div class="face front"><img id="face6" alt="Face 6"></div>
           </div>
         </div>
@@ -178,7 +178,7 @@
       <div class="slot" id="slot-7">
         <div class="scene" id="s7">
           <div class="card" id="c7">
-            <div class="face back"><img src="cardback3.png" alt="Back"></div>
+            <div class="face back"><img src="cardback.png" alt="Back"></div>
             <div class="face front"><img id="face7" alt="Face 7"></div>
           </div>
         </div>
@@ -190,7 +190,7 @@
       <div class="slot" id="slot-1">
         <div class="scene" id="s1">
           <div class="card is-flipped" id="c1">
-            <div class="face back"><img src="cardback3.png" alt="Back"></div>
+            <div class="face back"><img src="cardback.png" alt="Back"></div>
             <div class="face front"><img id="face1" alt="Face 1"></div>
           </div>
         </div>
@@ -199,7 +199,7 @@
       <div class="slot" id="slot-2">
         <div class="scene" id="s2">
           <div class="card" id="c2">
-            <div class="face back"><img src="cardback3.png" alt="Back"></div>
+            <div class="face back"><img src="cardback.png" alt="Back"></div>
             <div class="face front"><img id="face2" alt="Face 2"></div>
           </div>
         </div>
@@ -208,7 +208,7 @@
       <div class="slot" id="slot-3">
         <div class="scene" id="s3">
           <div class="card" id="c3">
-            <div class="face back"><img src="cardback3.png" alt="Back"></div>
+            <div class="face back"><img src="cardback.png" alt="Back"></div>
             <div class="face front"><img id="face3" alt="Face 3"></div>
           </div>
         </div>
@@ -217,7 +217,7 @@
       <div class="slot" id="slot-4">
         <div class="scene" id="s4">
           <div class="card" id="c4">
-            <div class="face back"><img src="cardback3.png" alt="Back"></div>
+            <div class="face back"><img src="cardback.png" alt="Back"></div>
             <div class="face front"><img id="face4" alt="Face 4"></div>
           </div>
         </div>
@@ -262,7 +262,7 @@ function shuffle(arr){
   return a;
 }
 
-/* ====== Sound (WebAudio) ====== */
+/* ====== Sound (WebAudio blips) ====== */
 let audioCtx = null;
 function ensureAudio(){
   if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -285,6 +285,43 @@ function blip(freq=440, dur=0.06, type="sine", gain=0.06){
 function sfxFlip(){ blip(520, 0.07, "triangle", 0.05); blip(760, 0.05, "triangle", 0.03); }
 function sfxMove(){ blip(220, 0.10, "sawtooth", 0.03); blip(330, 0.10, "sawtooth", 0.02); }
 function sfxReplace(){ blip(900, 0.06, "square", 0.04); blip(420, 0.10, "sine", 0.03); }
+
+/* ====== ✅ Endgame MP3 via WebAudio (reliable on GitHub Pages) ====== */
+let endgameBuffer = null;
+let endgameLoading = false;
+let endgamePlayed = false;
+
+async function loadEndgame(){
+  if(endgameBuffer || endgameLoading) return;
+  endgameLoading = true;
+  try{
+    // Ensure file name & case exactly match your repo: "endgame.mp3"
+    const res = await fetch("endgame.mp3", { cache: "no-store" });
+    if(!res.ok) throw new Error("MP3 fetch failed: " + res.status);
+    const arr = await res.arrayBuffer();
+    ensureAudio();
+    endgameBuffer = await audioCtx.decodeAudioData(arr);
+  } catch(err){
+    console.error(err);
+  } finally{
+    endgameLoading = false;
+  }
+}
+
+function playEndgame(){
+  if(endgamePlayed) return;
+  endgamePlayed = true;
+
+  if(!audioCtx || !endgameBuffer){
+    console.warn("Endgame not loaded yet (buffer missing).");
+    return;
+  }
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = endgameBuffer;
+  src.connect(audioCtx.destination);
+  src.start();
+}
 
 /* ====== Deal / reset ====== */
 function deal(){
@@ -324,16 +361,14 @@ function canReplace(scene){
   return (slot in RIGHT_CARD_BY_SLOT) &&
          !usedReplaceSlots.has(slot) &&
          deck.length > 0 &&
-         !rightCardIsFlipped(slot) &&  // <-- BEFORE right card flips
+         !rightCardIsFlipped(slot) &&
          !busy;
 }
 
 function updateEligibilityUI(){
-  // used slot outline
   document.querySelectorAll(".slot").forEach(sl => sl.classList.remove("used-discard"));
   usedReplaceSlots.forEach(id => document.getElementById(id)?.classList.add("used-discard"));
 
-  // eligible glow
   document.querySelectorAll(".scene").forEach(scene => {
     scene.classList.toggle("eligible", canReplace(scene));
   });
@@ -348,6 +383,7 @@ async function replaceCard(scene){
 
   busy = true;
   ensureAudio();
+  loadEndgame(); // ✅ prime mp3 on first interaction
   sfxReplace();
 
   const card = scene.querySelector(".card");
@@ -360,7 +396,7 @@ async function replaceCard(scene){
   await wait(200);
 
   img.src = deck.shift();
-  card.classList.add("is-flipped"); // replacement appears face-up
+  card.classList.add("is-flipped");
 
   scene.style.transform = "";
   scene.style.opacity   = "1";
@@ -378,6 +414,7 @@ async function replaceCard(scene){
 async function moveSceneToSlotLift(sceneId, slotTargetId){
   busy = true;
   ensureAudio();
+  loadEndgame(); // ✅ prime mp3 on first interaction
   sfxMove();
 
   const scene = document.getElementById(sceneId);
@@ -440,6 +477,7 @@ async function advance(){
   if(busy || step >= steps.length) return;
   busy = true;
   ensureAudio();
+  loadEndgame(); // ✅ start loading as soon as user interacts
   await steps[step++]();
   busy = false;
   updateEligibilityUI();
@@ -454,7 +492,12 @@ const steps = [
   async ()=>{ document.getElementById("c6").classList.add("is-flipped"); sfxFlip(); await wait(flipWait); },
   async ()=>{ document.getElementById("c7").classList.add("is-flipped"); sfxFlip(); await wait(flipWait); },
   async ()=>{ await moveSceneToSlotLift("s7","slot-b"); },
-  async ()=>{ document.getElementById("c8").classList.add("is-flipped"); sfxFlip(); await wait(flipWait); }
+  async ()=>{ 
+    document.getElementById("c8").classList.add("is-flipped");
+    sfxFlip();
+    await wait(flipWait);
+    playEndgame(); // ✅ play endgame.mp3 once final flip finishes
+  }
 ];
 
 /* ====== INIT ====== */
@@ -462,10 +505,7 @@ deal();
 reset();
 updateEligibilityUI();
 
-/* ====== Click behaviour ======
-   - Click card: replace if eligible; otherwise advance
-   - Click background: advance
-*/
+/* ====== Click behaviour ====== */
 document.addEventListener("click", () => advance());
 
 document.querySelectorAll(".scene").forEach(scene=>{
